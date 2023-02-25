@@ -1,20 +1,27 @@
 package main
 
 import (
+	"log"
+	"net/http"
+
 	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v5"
 	"github.com/lgukasyan/passplanet/db"
+	r "github.com/lgukasyan/passplanet/routes"
 )
 
+type Application struct {
+	DB *pgx.Conn
+}
+
 func main() {
-	r := gin.Default()
+	var app Application
+	app.DB = db.ConnectDB()
+	
+	var routes *gin.Engine = r.Routes()
 
-	db.ConnectDB()
-
-	r.GET("/", func(ctx *gin.Context) {
-		ctx.JSON(200, gin.H{
-			"message": "pong",
-		})
-	})
-
-	r.Run() // listen and serve on 0.0.0.0:8080
+	err := http.ListenAndServe(":8080", routes)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
