@@ -8,7 +8,7 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-func ConnectDB(){
+func ConnectDB() *pgx.Conn {
 	var uri string = os.Getenv("POSTGRESQL_URI")
 	if uri == "" {
 		log.Fatalf("unable to connect to the database, missing database (URI).")
@@ -22,4 +22,5 @@ func ConnectDB(){
 	defer conn.Close(context.Background())
 
 	log.Println("PostgreSQL is connected!")
+	return conn
 }
