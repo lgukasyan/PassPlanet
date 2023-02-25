@@ -10,7 +10,11 @@ import (
 )
 
 func ConnectDB(){
-	log.Println(os.Getenv("POSTGRESQL_URI"))
+	var uri string = os.Getenv("POSTGRESQL_URI")
+	if uri == "" {
+		log.Fatalf("unable to connect to the database, missing database (URI).")
+	}
+
 	conn, err := pgx.Connect(context.Background(), os.Getenv("POSTGRESQL_URI"))
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "unable to connect to database: %v\n", err)
