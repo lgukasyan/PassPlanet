@@ -2,7 +2,6 @@ package db
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"os"
 
@@ -17,9 +16,9 @@ func ConnectDB(){
 
 	conn, err := pgx.Connect(context.Background(), os.Getenv("POSTGRESQL_URI"))
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "unable to connect to database: %v\n", err)
-		os.Exit(1)
+		log.Fatalf("unable to connect to database: %v\n", err)
 	}
+
 	defer conn.Close(context.Background())
 
 	log.Println("PostgreSQL is connected!")
