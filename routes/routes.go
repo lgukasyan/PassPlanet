@@ -1,18 +1,13 @@
 package routes
 
 import (
-	"net/http"
 	"github.com/gin-gonic/gin"
+  h "github.com/lgukasyan/passplanet/handlers"
 )
 
 func Routes() *gin.Engine {
 	r := gin.Default()
-
-  r.GET("/ping", func(c *gin.Context) {
-    c.JSON(http.StatusOK, gin.H{
-      "message": "pong",
-    })
-  })
-
+  r.GET("/ping", h.Ping)
+  
 	return r
 }
