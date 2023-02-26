@@ -5,20 +5,18 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/jackc/pgx/v5"
 	"github.com/lgukasyan/passplanet/db"
 	r "github.com/lgukasyan/passplanet/routes"
 )
 
-type Application struct {
-	DB *pgx.Conn
-}
-
 func main() {
-	var app Application	
-	app.DB = db.ConnectDB()
-	
+	if err := db.OpenDB(); err != nil {
+		log.Fatalf("unable to connect to database: %v\n", err)
+	}
+
 	var routes *gin.Engine = r.Routes()
+	
+	defer db.Close()
 
 	err := http.ListenAndServe(":8080", routes)
 	if err != nil {

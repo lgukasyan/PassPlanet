@@ -2,7 +2,7 @@ package routes
 
 import (
 	"github.com/gin-gonic/gin"
-  h "github.com/lgukasyan/passplanet/handlers"
+	h "github.com/lgukasyan/passplanet/handlers"
 )
 
 func Routes() *gin.Engine {
