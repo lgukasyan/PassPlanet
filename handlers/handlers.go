@@ -7,6 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/lgukasyan/passplanet/db"
+	u "github.com/lgukasyan/passplanet/utils"
 )
 
 func Ping(c *gin.Context) {
@@ -21,16 +22,26 @@ func SignUp(c *gin.Context) {
 		Password string `json:"password" binding:"required"`
 	}
 
-	if err := c.BindJSON(&requestUserBody); err != nil {
+	var err error
+
+	if err = c.BindJSON(&requestUserBody); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "error binding json"})
 		return
 	}
 
+	err = u.HashPassword(&requestUserBody.Password)
+
+	if err != nil {
+		log.Println(err.Error())
+		return
+	}
+
 	var q string = `INSERT INTO users(name, lastname, email, password) VALUES($1, $2, $3, $4);`
-	_, err := db.DB.Exec(context.Background(), q, &requestUserBody.Name, &requestUserBody.Lastname, &requestUserBody.Email, &requestUserBody.Password)
+	_, err = db.DB.Exec(context.Background(), q, &requestUserBody.Name, &requestUserBody.Lastname, &requestUserBody.Email, &requestUserBody.Password)
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
 
 	c.JSON(http.StatusAccepted, &requestUserBody)
 }
+
