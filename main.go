@@ -15,7 +15,7 @@ type Application struct {
 }
 
 func main() {
-	var app Application
+	var app Application	
 	app.DB = db.ConnectDB()
 	
 	var routes *gin.Engine = r.Routes()

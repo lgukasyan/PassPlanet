@@ -8,6 +8,7 @@ import (
 func Routes() *gin.Engine {
 	r := gin.Default()
   r.GET("/ping", h.Ping)
+  r.POST("/sign-up", h.SignUp)
   
 	return r
 }
