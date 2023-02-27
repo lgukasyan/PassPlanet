@@ -18,7 +18,7 @@ func OpenDB() (error) {
 	}
 
 	var err error
-	DB, err = pgx.Connect(context.Background(), os.Getenv("POSTGRESQL_URI"))
+	DB, err = pgx.Connect(context.Background(), uri)
 	log.Println("PostgreSQL is connected!")
 	return err
 }
