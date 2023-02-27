@@ -60,3 +60,40 @@ func SignUp(c *gin.Context) {
 
 	c.JSON(http.StatusAccepted, &requestUserBody)
 }
+
+func SignIn(c *gin.Context){
+	var requestUserBody struct {
+		Email    string `json:"email"    binding:"required"`
+		Password string `json:"password" binding:"required"`
+	}
+
+	var err error
+
+	if err = c.BindJSON(&requestUserBody); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "error binding json"})
+		return
+	}
+
+	var q string
+	var row pgx.Row
+	var password string
+
+	q = `SELECT (password) FROM users WHERE email=$1;`
+	row = db.DB.QueryRow(context.Background(), q, &requestUserBody.Email)
+	err = row.Scan(&password)
+
+	if err == pgx.ErrNoRows {
+		log.Println("User not found")
+		return
+	}
+
+	err = u.ComparePassword(&password, &requestUserBody.Password)
+	if err != nil {
+		log.Println("error, incorrect password")
+		return
+	}
+
+	c.JSON(http.StatusAccepted, gin.H{
+		"message": "logged",
+	})
+}
