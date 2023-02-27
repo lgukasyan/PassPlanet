@@ -2,12 +2,13 @@ package routes
 
 import (
 	"github.com/gin-gonic/gin"
-  h "github.com/lgukasyan/passplanet/handlers"
+	h "github.com/lgukasyan/passplanet/handlers"
 )
 
 func Routes() *gin.Engine {
 	r := gin.Default()
   r.GET("/ping", h.Ping)
-  
+  r.POST("/sign-up", h.SignUp)
+	r.POST("/sign-in", h.SignIn)
 	return r
 }
