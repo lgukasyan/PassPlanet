@@ -6,9 +6,13 @@ import (
 )
 
 func Routes() *gin.Engine {
+	
 	r := gin.Default()
-  r.GET("/ping", h.Ping)
-  r.POST("/sign-up", h.SignUp)
+	
+	r.GET("/ping", h.Ping)
+	r.POST("/sign-up", h.SignUp)
 	r.POST("/sign-in", h.SignIn)
+	r.POST("/create", h.CreateNewPassword)
+
 	return r
 }

@@ -46,7 +46,7 @@ func SignUp(c *gin.Context) {
 	}
 
 	err = u.HashPassword(&requestUserBody.Password)
-	
+
 	if err != nil {
 		log.Fatalf("error hashing the password %s", err.Error())
 	}
@@ -61,7 +61,7 @@ func SignUp(c *gin.Context) {
 	c.JSON(http.StatusAccepted, &requestUserBody)
 }
 
-func SignIn(c *gin.Context){
+func SignIn(c *gin.Context) {
 	var requestUserBody struct {
 		Email    string `json:"email"    binding:"required"`
 		Password string `json:"password" binding:"required"`
@@ -95,5 +95,55 @@ func SignIn(c *gin.Context){
 
 	c.JSON(http.StatusAccepted, gin.H{
 		"message": "logged",
+	})
+}
+
+func CreateNewPassword(c *gin.Context) {
+	var requestUserBody struct {
+		User_id     int    `json:"user_id"`
+		Url         string `json:"url"`
+		IB64        string `json:"icon_base64data"`
+		Title       string `json:"title"   					binding:"required"`
+		Description string `json:"description" 			binding:"required"`
+		Password    string `json:"password" 				binding:"required"`
+	}
+
+	var err error
+
+	if err = c.BindJSON(&requestUserBody); err != nil {
+		log.Println(err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"message": "error binding json"})
+		return
+	}
+
+	var q string
+	var row pgx.Row
+
+	q = `SELECT (user_id) FROM users WHERE email=$1;`
+	row = db.DB.QueryRow(context.Background(), q, &requestUserBody.User_id)
+	err = row.Scan(&requestUserBody.User_id)
+
+	if err == pgx.ErrNoRows {
+		log.Println("User not found")
+		return
+	}
+
+	log.Println("User exists")
+
+	q = `INSERT INTO passwords(user_id, title, description, password) VALUES($1, $2, $3, $4);`
+	_, err = db.DB.Exec(context.Background(), q,
+		&requestUserBody.User_id,
+		&requestUserBody.Title,
+		&requestUserBody.Description,
+		&requestUserBody.Password,
+	)
+
+	if err != nil {
+		log.Fatalf(err.Error())
+		return
+	}
+
+	c.JSON(http.StatusAccepted, gin.H{
+		"message": "created",
 	})
 }
