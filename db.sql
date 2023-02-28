@@ -10,7 +10,7 @@ create table users (
 
 create table passwords (
   password_id serial primary key,
-  user_id serial references users(user_id) not null,
+  user_id serial not null references users(user_id),
   title varchar(50) not null,
   url varchar(255),
   icon_base64data text,
