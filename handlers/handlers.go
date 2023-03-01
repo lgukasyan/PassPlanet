@@ -22,6 +22,7 @@ func SignUp(c *gin.Context) {
 		Name     string `json:"name"     binding:"required"`
 		Lastname string `json:"lastname" binding:"required"`
 		Email    string `json:"email"    binding:"required"`
+		Key      string `json:"key"      binding:"required"`
 		Password string `json:"password" binding:"required"`
 	}
 
@@ -46,13 +47,24 @@ func SignUp(c *gin.Context) {
 	}
 
 	err = u.HashPassword(&requestUserBody.Password)
-
 	if err != nil {
 		log.Fatalf("error hashing the password %s", err.Error())
 	}
 
-	q = `INSERT INTO users(name, lastname, email, password) VALUES($1, $2, $3, $4);`
-	_, err = db.DB.Exec(context.Background(), q, &requestUserBody.Name, &requestUserBody.Lastname, &requestUserBody.Email, &requestUserBody.Password)
+	err = u.HashPassword(&requestUserBody.Key)
+	if err != nil {
+		log.Fatalf("error hashing the key %s", err.Error())
+	}
+
+	q = `INSERT INTO users(name, lastname, email, key, password) VALUES($1, $2, $3, $4, $5);`
+	_, err = db.DB.Exec(context.Background(), q,
+		&requestUserBody.Name,
+		&requestUserBody.Lastname,
+		&requestUserBody.Email,
+		&requestUserBody.Key,
+		&requestUserBody.Password,
+	)
+
 	if err != nil {
 		log.Fatalf(err.Error())
 		return
