@@ -159,3 +159,55 @@ func CreateNewPassword(c *gin.Context) {
 		"message": "created",
 	})
 }
+
+func DeletePassword(c *gin.Context) {
+	var requestUserBody struct {
+		User_id     int    `json:"user_id"`
+		Password_id int    `json:"password_id"          binding:"required"`
+		Url         string `json:"url"`
+		IB64        string `json:"icon_base64data"`
+		Title       string `json:"title"   					binding:"required"`
+		Description string `json:"description" 			binding:"required"`
+		Password    string `json:"password" 				binding:"required"`
+	}
+
+	var err error
+
+	if err = c.BindJSON(&requestUserBody); err != nil {
+		log.Println(err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"message": "error binding json"})
+		return
+	}
+
+	var q string
+	var row pgx.Row
+
+	q = `SELECT (user_id) FROM users WHERE email=$1;`
+	row = db.DB.QueryRow(context.Background(), q, &requestUserBody.User_id)
+	err = row.Scan(&requestUserBody.User_id)
+
+	if err == pgx.ErrNoRows {
+		log.Println("User not found")
+		return
+	}
+
+	q = `SELECT (user_id) FROM passwords WHERE password_id=$1;`
+	row = db.DB.QueryRow(context.Background(), q, &requestUserBody.Password_id)
+	err = row.Scan(&requestUserBody.User_id)
+
+	if err == pgx.ErrNoRows {
+		log.Println("Password not found")
+		return
+	}
+
+	q = `DELETE FROM passwords WHERE password_id = $1 AND user_id = $2;`
+	_, err = db.DB.Exec(context.Background(), q, &requestUserBody.Password_id, &requestUserBody.User_id)
+	if err != nil {
+		log.Println("error deleting password")
+		return
+	}
+
+	c.JSON(http.StatusAccepted, gin.H{
+		"message": "deleted",
+	})
+}
