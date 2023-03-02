@@ -13,6 +13,7 @@ func Routes() *gin.Engine {
 	r.POST("/sign-up", h.SignUp)
 	r.POST("/sign-in", h.SignIn)
 	r.POST("/create", h.CreateNewPassword)
+	r.POST("/delete", h.DeletePassword)
 
 	return r
 }
