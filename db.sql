@@ -19,3 +19,5 @@ create table passwords (
   description varchar(100),
   password char(60) not null
 );
+
+SELECT (title, description, password) FROM passwords WHERE user_id=1;

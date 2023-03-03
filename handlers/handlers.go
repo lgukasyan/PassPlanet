@@ -211,3 +211,53 @@ func DeletePassword(c *gin.Context) {
 		"message": "deleted",
 	})
 }
+
+func GetAllPass(c *gin.Context) {
+	var requestUserBody struct {
+		User_id int `"json:user_id"`
+	}
+
+	var err error
+	var row pgx.Row
+	var rows pgx.Rows
+	var q string
+
+	if err = c.BindJSON(&requestUserBody); err != nil {
+		log.Println(err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"message": "error binding json"})
+		return
+	}
+
+	q = `SELECT (user_id) FROM users WHERE user_id=$1;`
+	row = db.DB.QueryRow(context.Background(), q, &requestUserBody.User_id)
+	err = row.Scan(&requestUserBody.User_id)
+
+	if err == pgx.ErrNoRows {
+		log.Println("User not found")
+		return
+	}
+
+	q = `SELECT title, description, password FROM passwords WHERE user_id=$1;`
+	rows, err = db.DB.Query(context.Background(), q, &requestUserBody.User_id)
+	if err != nil {
+		log.Println("error getting all the passwords")
+		return
+	}
+	defer rows.Close()
+
+	var passl *([]models.Password) = &([]models.Password{})
+
+	for rows.Next() {
+		var p *models.Password = &models.Password{}
+		if err = rows.Scan(&p.Title, &p.Description, &p.Password); err != nil {
+			log.Println(err.Error())
+			log.Println("error getting the passwords")
+			return
+		}
+		*passl = append(*passl, *p)
+	}
+
+	c.JSON(http.StatusAccepted, gin.H{
+		"message": passl,
+	})
+}
