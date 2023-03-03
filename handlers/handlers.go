@@ -233,16 +233,16 @@ func GetAllPass(c *gin.Context) {
 	}
 	defer rows.Close()
 
-	passl := []models.Password{}
+	var passl *([]models.Password) = &([]models.Password{})
 
 	for rows.Next() {
-		var p models.Password
+		var p *models.Password = &models.Password{}
 		if err = rows.Scan(&p.Title, &p.Description, &p.Password); err != nil {
 			log.Println(err.Error())
 			log.Println("error getting the passwords")
 			return
 		}
-		passl = append(passl, p)
+		*passl = append(*passl, *p)
 	}
 
 	c.JSON(http.StatusAccepted, gin.H{
