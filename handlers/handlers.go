@@ -53,7 +53,7 @@ func SignUp(c *gin.Context) {
 		log.Fatalf("error hashing the password %s", err.Error())
 	}
 
-	q = `INSERT INTO users(name, lastname,  email, password, key) VALUES($1, $2, $3, $4, $5);`
+	q = `INSERT INTO users(name, lastname, email, key, password) VALUES($1, $2, $3, $4, $5);`
 	_, err = db.DB.Exec(context.Background(), q,
 		&requestUserBody.Name,
 		&requestUserBody.Lastname,
