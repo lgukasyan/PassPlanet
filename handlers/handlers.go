@@ -116,19 +116,20 @@ func CreateNewPassword(c *gin.Context) {
 		return
 	}
 
-	var q string
-	var row pgx.Row
+	var (
+		q string
+		row pgx.Row
+		valid bool
+	)
 
-	q = `SELECT (user_id) FROM users WHERE email=$1;`
+	q = `SELECT EXISTS(SELECT 1 FROM users WHERE user_id=$1)`
 	row = db.DB.QueryRow(context.Background(), q, &requestUserBody.User_id)
-	err = row.Scan(&requestUserBody.User_id)
+	err = row.Scan(&valid)
 
-	if err == pgx.ErrNoRows {
+	if !valid || err != nil {
 		log.Println("User not found")
 		return
 	}
-
-	log.Println("User exists")
 
 	q = `INSERT INTO passwords(user_id, title, description, password) VALUES($1, $2, $3, $4);`
 	_, err = db.DB.Exec(context.Background(), q,
@@ -216,7 +217,7 @@ func GetAllPass(c *gin.Context) {
 		return
 	}
 
-	q = `SELECT (user_id) FROM users WHERE user_id=$1;`
+	q = `SELECT COUNT(*) FROM users WHERE user_id=$1;`
 	row = db.DB.QueryRow(context.Background(), q, &requestUserBody.User_id)
 	err = row.Scan(&requestUserBody.User_id)
 
