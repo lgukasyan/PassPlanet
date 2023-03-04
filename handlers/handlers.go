@@ -177,7 +177,7 @@ func DeletePassword(c *gin.Context) {
 
 	q = `DELETE FROM passwords WHERE password_id = $1 AND user_id = $2;`
 	res, err := db.DB.Exec(context.Background(), q, &requestUserBody.Password_id, &requestUserBody.User_id)
-	
+
 	if err != nil {
 		log.Println("error deleting the password")
 		return
@@ -196,13 +196,8 @@ func DeletePassword(c *gin.Context) {
 
 func GetAllPass(c *gin.Context) {
 	var requestUserBody struct {
-		User_id int `"json:user_id"`
+		User_id int `json:"user_id"`
 	}
-
-	var err error
-	var row pgx.Row
-	var rows pgx.Rows
-	var q string
 
 	if err = c.BindJSON(&requestUserBody); err != nil {
 		log.Println(err.Error())
@@ -210,16 +205,16 @@ func GetAllPass(c *gin.Context) {
 		return
 	}
 
-	q = `SELECT COUNT(*) FROM users WHERE user_id=$1;`
+	q = `SELECT EXISTS(SELECT 1 FROM users WHERE user_id=$1);`
 	row = db.DB.QueryRow(context.Background(), q, &requestUserBody.User_id)
-	err = row.Scan(&requestUserBody.User_id)
+	err = row.Scan(&valid)
 
-	if err == pgx.ErrNoRows {
-		log.Println("User not found")
+	if !valid || err != nil {
+		log.Println("User doesn't exist")
 		return
 	}
 
-	q = `SELECT title, description, password FROM passwords WHERE user_id=$1;`
+	q = `SELECT user_id, title, description, password FROM passwords WHERE user_id=$1;`
 	rows, err = db.DB.Query(context.Background(), q, &requestUserBody.User_id)
 	if err != nil {
 		log.Println("error getting all the passwords")
@@ -231,7 +226,7 @@ func GetAllPass(c *gin.Context) {
 
 	for rows.Next() {
 		var p *models.Password = &models.Password{}
-		if err = rows.Scan(&p.Title, &p.Description, &p.Password); err != nil {
+		if err = rows.Scan(&p.User_id, &p.Title, &p.Description, &p.Password); err != nil {
 			log.Println(err.Error())
 			log.Println("error getting the passwords")
 			return
