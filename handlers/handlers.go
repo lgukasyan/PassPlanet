@@ -13,6 +13,14 @@ import (
 	u "github.com/lgukasyan/passplanet/utils"
 )
 
+var (
+	err   error
+	q     string
+	valid bool
+	rows  pgx.Rows
+	row   pgx.Row
+)
+
 func Ping(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "pong"})
 }
@@ -22,26 +30,21 @@ func SignUp(c *gin.Context) {
 		Name     string `json:"name"     binding:"required"`
 		Lastname string `json:"lastname" binding:"required"`
 		Email    string `json:"email"    binding:"required"`
+		Key      string `json:"key"      binding:"required"`
 		Password string `json:"password" binding:"required"`
 	}
-
-	var err error
 
 	if err = c.BindJSON(&requestUserBody); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "error binding json"})
 		return
 	}
 
-	var q string
-	var row pgx.Row
-	var user *models.User = &models.User{}
-
-	q = `SELECT (email) FROM users WHERE email=$1;`
+	q = `SELECT EXISTS(SELECT 1 FROM users WHERE email=$1);`
 	row = db.DB.QueryRow(context.Background(), q, &requestUserBody.Email)
-	err = row.Scan(&user.Email)
+	err = row.Scan(&valid)
 
-	if err != pgx.ErrNoRows {
-		log.Println("email exists")
+	if valid || err != nil {
+		log.Println("Email already exists")
 		return
 	}
 
@@ -51,8 +54,8 @@ func SignUp(c *gin.Context) {
 		log.Fatalf("error hashing the password %s", err.Error())
 	}
 
-	q = `INSERT INTO users(name, lastname, email, password) VALUES($1, $2, $3, $4);`
-	_, err = db.DB.Exec(context.Background(), q, &requestUserBody.Name, &requestUserBody.Lastname, &requestUserBody.Email, &requestUserBody.Password)
+	q = `INSERT INTO users(name, lastname,  email, password, key) VALUES($1, $2, $3, $4, $5);`
+	_, err = db.DB.Exec(context.Background(), q, &requestUserBody.Name, &requestUserBody.Lastname, &requestUserBody.Email, &requestUserBody.Password, &requestUserBody.Key)
 	if err != nil {
 		log.Fatalf(err.Error())
 		return
@@ -117,8 +120,8 @@ func CreateNewPassword(c *gin.Context) {
 	}
 
 	var (
-		q string
-		row pgx.Row
+		q     string
+		row   pgx.Row
 		valid bool
 	)
 
