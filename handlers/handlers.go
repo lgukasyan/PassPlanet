@@ -113,19 +113,11 @@ func CreateNewPassword(c *gin.Context) {
 		Password    string `json:"password" 				binding:"required"`
 	}
 
-	var err error
-
 	if err = c.BindJSON(&requestUserBody); err != nil {
 		log.Println(err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"message": "error binding json"})
 		return
 	}
-
-	var (
-		q     string
-		row   pgx.Row
-		valid bool
-	)
 
 	q = `SELECT EXISTS(SELECT 1 FROM users WHERE user_id=$1)`
 	row = db.DB.QueryRow(context.Background(), q, &requestUserBody.User_id)
