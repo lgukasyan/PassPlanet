@@ -230,3 +230,52 @@ func GetAllPass(c *gin.Context) {
 		"message": passl,
 	})
 }
+
+func UpdatePass(c *gin.Context) {
+	var requestUserBody struct {
+		Password_id int    `json:"password_id" binding:"required"`
+		User_id     int    `json:"user_id" binding:"required"`
+		Url         string `json:"url"`
+		IB64        string `json:"icon_base64data"`
+		Title       string `json:"title"   					binding:"required"`
+		Description string `json:"description" 			binding:"required"`
+		Password    string `json:"password" 				binding:"required"`
+	}
+
+	if err = c.BindJSON(&requestUserBody); err != nil {
+		log.Println(err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"message": "error binding json"})
+		return
+	}
+
+	q = "SELECT EXISTS(SELECT 1 FROM passwords WHERE password_id=$1 AND user_id=$2);"
+	row = db.DB.QueryRow(context.Background(), q, &requestUserBody.Password_id, &requestUserBody.User_id)
+	err = row.Scan(&valid)
+
+	if !valid || err != nil {
+		log.Println(err)
+		log.Println("password not found")
+		return
+	}
+
+	q = "UPDATE passwords SET url=$1, title=$2, description=$3, password=$4 WHERE password_id=$5 AND user_id=$6"
+	res, err := db.DB.Exec(context.Background(), q,
+		&requestUserBody.Url,
+		&requestUserBody.Title,
+		&requestUserBody.Description,
+		&requestUserBody.Password,
+		&requestUserBody.Password_id,
+		&requestUserBody.User_id,
+	)
+
+	if err != nil {
+		log.Println(err)
+		log.Println("error updating")
+		return
+	}
+
+	c.JSON(http.StatusAccepted, gin.H{
+		"message":       "updated",
+		"rows affected": res.RowsAffected(),
+	})
+}
